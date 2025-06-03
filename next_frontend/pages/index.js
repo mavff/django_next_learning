@@ -8,6 +8,7 @@ export default function Home() {
   const [selectedTags, setSelectedTags] = useState([]); // NOVO
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -139,6 +140,29 @@ export default function Home() {
           <option key={tag.id} value={tag.id}>{tag.name}</option>
         ))}
       </select>
+      <div className="flex flex-wrap mb-2">
+        {tags.map(tag => (
+          <span key={tag.id} className="mr-2 mb-1 px-2 py-1 bg-blue-200 rounded text-xs flex items-center">
+            {tag.name}
+            <button
+              onClick={async () => {
+                if (window.confirm('Excluir esta tag?')) {
+                  const token = localStorage.getItem('access');
+                  await fetch(`http://localhost:8000/api/tags/${tag.id}/`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  fetchTags(token);
+                }
+              }}
+              className="ml-1 text-red-600 hover:text-red-900"
+              title="Excluir tag"
+            >
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
       <form onSubmit={handleAddTask} className="flex mb-4">
         <input
           type="text"
@@ -154,6 +178,8 @@ export default function Home() {
           Adicionar
         </button>
       </form>
+      {success && <div className="text-green-600 text-xs mb-1">{success}</div>}
+      {error && <div className="text-red-500 text-xs mb-1">{error}</div>} 
       <ul>
         {tasks.map((task) => (
           <li key={task.id} className="mb-2 p-2 bg-gray-100 rounded flex flex-col">
@@ -177,6 +203,21 @@ export default function Home() {
                 className="ml-2 px-2 py-1 bg-yellow-400 rounded hover:bg-yellow-500"
               >
                 {task.done ? "Desfazer" : "Concluir"}
+              </button>
+              <button
+                onClick={async () => {
+                  if (window.confirm('Deseja realmente excluir esta tarefa?')) {
+                    const token = localStorage.getItem('access');
+                    await fetch(`http://localhost:8000/api/tasks/${task.id}/`, {
+                      method: 'DELETE',
+                      headers: { Authorization: `Bearer ${token}` },
+                    });
+                    fetchTasks(token);
+                  }
+                }}
+                className="ml-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700"
+              >
+                Excluir
               </button>
             </div>
             <div className="flex flex-wrap mt-1">

@@ -4,7 +4,7 @@ export default function Comments({ taskId }) {
   const [comments, setComments] = useState([]);
   const [text, setText] = useState('');
   const [error, setError] = useState('');
-
+  const [success, setSuccess] = useState('');
   useEffect(() => {
     fetchComments();
     // eslint-disable-next-line
@@ -35,9 +35,12 @@ export default function Comments({ taskId }) {
     if (res.ok) {
       setText('');
       setError('');
+      setSuccess('Comentário adicionado!');
       fetchComments();
+      setTimeout(() => setSuccess(''), 2000); // Limpa mensagem após 2s
     } else {
       setError('Erro ao adicionar comentário.');
+      setSuccess('');
     }
   };
 
@@ -61,8 +64,35 @@ export default function Comments({ taskId }) {
       {error && <div className="text-red-500 text-xs mb-1">{error}</div>}
       <ul>
         {comments.map(comment => (
-          <li key={comment.id} className="text-xs bg-gray-200 rounded p-1 mb-1">
-            <b>{comment.user}:</b> {comment.text} <span className="text-gray-500">{new Date(comment.created_at).toLocaleString()}</span>
+          <li key={comment.id} className="text-xs bg-gray-200 rounded p-1 mb-1 flex justify-between items-center">
+            <span>
+              <b>{comment.user}:</b> {comment.text} <span className="text-gray-500">{new Date(comment.created_at).toLocaleString()}</span>
+            </span>
+            <button
+              onClick={async () => {
+                if (window.confirm('Excluir este comentário?')) {
+                  const token = localStorage.getItem('access');
+                  const res = await fetch(`http://localhost:8000/api/tasks/${taskId}/comments/${comment.id}/`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  if (res.ok) {
+                    setSuccess('Comentário excluído!');
+                    setError('');
+                    fetchComments();
+                    setTimeout(() => setSuccess(''), 2000);
+                  } else {
+                    setError('Erro ao excluir comentário.');
+                    setSuccess('');
+                  }
+                  fetchComments();
+                }
+              }}
+              className="ml-2 text-red-600 hover:text-red-900"
+              title="Excluir comentário"
+            >
+              ×
+            </button>
           </li>
         ))}
       </ul>
