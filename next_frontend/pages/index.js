@@ -10,7 +10,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
-
+  const [dueDate, setDueDate] = useState(''); // Estado para data de vencimento
   useEffect(() => {
     const token = localStorage.getItem('access');
     if (!token) {
@@ -55,6 +55,7 @@ export default function Home() {
 
     if (res.ok) {
       setName('');
+      setDueDate('');
       setSelectedTags([]);
       setError('');
       fetchTasks(token);
@@ -85,17 +86,23 @@ export default function Home() {
         </div>
       )}
       <Tags selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
-      <form onSubmit={handleAddTask} className="flex mb-4">
+      <form onSubmit={handleAddTask} className="flex flex-col mb-4">
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nova tarefa"
-          className="flex-1 p-2 border border-gray-300 rounded-l"
+          className="p-2 border border-gray-300 rounded mb-2"
+        />
+        <input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          className="p-2 border border-gray-300 rounded mb-2"
         />
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           Adicionar
         </button>
@@ -106,11 +113,19 @@ export default function Home() {
 
       <ul>
         {tasks.map((task) => (
-          <li key={task.id} className="mb-2 p-2 bg-gray-100 rounded flex flex-col">
+          <li
+            key={task.id}
+            className={`mb-2 p-2 rounded flex flex-col ${
+              task.due_date && new Date(task.due_date) < new Date() ? 'bg-red-100' : 'bg-gray-100'
+            }`}
+          >
             <div className="flex justify-between items-center">
               <span className={task.done ? "line-through text-gray-400" : ""}>
                 {task.name}
               </span>
+              <div className="text-xs text-gray-500">
+                {task.due_date && `Vence em: ${new Date(task.due_date).toLocaleDateString()}`}
+              </div>
               <button
                 onClick={async () => {
                   const token = localStorage.getItem('access');

@@ -11,6 +11,7 @@ class Task(models.Model):
     done = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     tags = models.ManyToManyField(Tag, blank=True)
+    due_date = models.DateField(null=True, blank=True)  # Adiciona campo de vencimento
     
 class Comment(models.Model):
     task = models.ForeignKey(Task, related_name='comments', on_delete=models.CASCADE)
