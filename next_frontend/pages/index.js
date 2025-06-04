@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Comments from './components/Comments';
+import Tags from './components/Tags'; 
+
 export default function Home() {
   const [tasks, setTasks] = useState([]);
-  const [newTag, setNewTag] = useState('');
-  const [tags, setTags] = useState([]); // NOVO
-  const [selectedTags, setSelectedTags] = useState([]); // NOVO
+  const [selectedTags, setSelectedTags] = useState([]);
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -17,38 +17,10 @@ export default function Home() {
       router.push('/login');
     } else {
       fetchTasks(token);
-      fetchTags(token); // NOVO
     }
     // eslint-disable-next-line
   }, []);
 
-  const fetchTags = async (token) => {
-    const res = await fetch('http://localhost:8000/api/tags/', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setTags(data);
-    }
-  };
-
-  const handleAddTag = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('access');
-    if (!newTag.trim()) return;
-    const res = await fetch('http://localhost:8000/api/tags/', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name: newTag }),
-    });
-    if (res.ok) {
-      setNewTag('');
-      fetchTags(token);
-    }
-  };
   const fetchTasks = async (token) => {
     const res = await fetch('http://localhost:8000/api/tasks/', {
       headers: {
@@ -78,12 +50,12 @@ export default function Home() {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({name, tag_ids: selectedTags.map(Number) }), // ENVIA tags
+      body: JSON.stringify({ name, tag_ids: selectedTags.map(Number) }),
     });
 
     if (res.ok) {
       setName('');
-      setSelectedTags([]); // Limpa seleção
+      setSelectedTags([]);
       setError('');
       fetchTasks(token);
     } else {
@@ -112,57 +84,7 @@ export default function Home() {
           {error}
         </div>
       )}
-      <form onSubmit={handleAddTag} className="flex mb-2">
-        <input
-          type="text"
-          value={newTag}
-          onChange={e => setNewTag(e.target.value)}
-          placeholder="Nova tag"
-          className="flex-1 p-2 border border-gray-300 rounded-l"
-        />
-        <button
-          type="submit"
-          className="bg-green-500 text-white px-4 py-2 rounded-r hover:bg-green-600"
-        >
-          Adicionar Tag
-        </button>
-      </form>
-      <select
-        multiple
-        value={selectedTags}
-        onChange={e => {
-          const options = Array.from(e.target.selectedOptions, option => option.value);
-          setSelectedTags(options);
-        }}
-        className="flex-1 p-2 border border-gray-300 rounded mb-2"
-      >
-        {tags.map(tag => (
-          <option key={tag.id} value={tag.id}>{tag.name}</option>
-        ))}
-      </select>
-      <div className="flex flex-wrap mb-2">
-        {tags.map(tag => (
-          <span key={tag.id} className="mr-2 mb-1 px-2 py-1 bg-blue-200 rounded text-xs flex items-center">
-            {tag.name}
-            <button
-              onClick={async () => {
-                if (window.confirm('Excluir esta tag?')) {
-                  const token = localStorage.getItem('access');
-                  await fetch(`http://localhost:8000/api/tags/${tag.id}/`, {
-                    method: 'DELETE',
-                    headers: { Authorization: `Bearer ${token}` },
-                  });
-                  fetchTags(token);
-                }
-              }}
-              className="ml-1 text-red-600 hover:text-red-900"
-              title="Excluir tag"
-            >
-              ×
-            </button>
-          </span>
-        ))}
-      </div>
+      <Tags selectedTags={selectedTags} setSelectedTags={setSelectedTags} />
       <form onSubmit={handleAddTask} className="flex mb-4">
         <input
           type="text"
@@ -178,8 +100,10 @@ export default function Home() {
           Adicionar
         </button>
       </form>
+
       {success && <div className="text-green-600 text-xs mb-1">{success}</div>}
-      {error && <div className="text-red-500 text-xs mb-1">{error}</div>} 
+      {error && <div className="text-red-500 text-xs mb-1">{error}</div>}
+
       <ul>
         {tasks.map((task) => (
           <li key={task.id} className="mb-2 p-2 bg-gray-100 rounded flex flex-col">
